@@ -1,0 +1,4 @@
+backend_endpoint: "https://objectstore.lon1.civo.com"
+backend_bucket: "tf-store"
+backend_key: "dev/terraform.tfstate"
+backend_region: "LON1"
