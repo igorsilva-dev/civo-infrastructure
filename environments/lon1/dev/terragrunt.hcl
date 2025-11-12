@@ -28,7 +28,8 @@ generate "providers" {
 terraform {
   required_providers {
     civo = {
-      source  = "civo/civo"     # adjust to the correct registry path if needed      
+      source  = "civo/civo"     # adjust to the correct registry path if needed
+      version = "1.1.7"  
     }
   }
 }
