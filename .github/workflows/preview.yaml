@@ -16,6 +16,15 @@ jobs:
       pull-requests: write
       checks: read    
     
+    strategy:
+      # Let other stacks finish even if one fails.
+      fail-fast: false
+      matrix:
+        include:
+          - env: dev
+            region: lon1
+          - env: dev
+            region: fra1
     steps:
       ### Check out the code
 
@@ -59,4 +68,4 @@ jobs:
 
       - name: List changed stacks
         id: list-changed
-        run: terramate list -C stacks/terraform/envs/${{ matrix.env }} --changed
+        run: terramate list -C environments/${{matrix.region}}/${{matrix.env}} --changed
