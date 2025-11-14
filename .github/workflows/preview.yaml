@@ -78,23 +78,23 @@ jobs:
       - name: Run Terraform init in all changed stacks
         if: steps.list-changed.outputs.stdout
         run: |
-          terramate script run \
-            -C environments/${{matrix.region}}/${{matrix.env}} \
+          terramate \
+            --chdir environments/${{matrix.region}}/${{matrix.env}} \
             --changed \
+            run \
             --parallel 1 \
-            init
+            terragrunt init
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Plan Terraform changes in changed stacks
         if: steps.list-changed.outputs.stdout
         run: |
-          terramate script run \
-            -C environments/${{matrix.region}}/${{matrix.env}} \
+          terramate \
+            --chdir environments/${{matrix.region}}/${{matrix.env}} \
             --changed \
-            --parallel 5 \
-            --continue-on-error \
-            -- \
-            preview
+            run \
+            --parallel 1 \
+            terragrunt plan
         env:
           GITHUB_TOKEN: ${{ github.token }}
