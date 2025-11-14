@@ -1,0 +1,101 @@
+name: Terraform Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy Terraform changes in changed Terramate stacks
+    runs-on: ubuntu-latest
+    env:
+      CIVO_ACCESS_KEY: ${{ secrets.CIVO_ACCESS_KEY }}
+      CIVO_SECRET_KEY: ${{ secrets.CIVO_SECRET_KEY }}
+      CIVO_TOKEN: ${{ secrets.CIVO_TOKEN }}
+
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: read
+      checks: read   
+    
+    strategy:
+      # Let other stacks finish even if one fails.
+      fail-fast: false
+      matrix:
+        include:
+          - env: dev
+            region: lon1
+          - env: dev
+            region: fra1
+    steps:
+      ### Check out the code
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      ### Install tooling
+
+      - name: Install Terramate
+        uses: terramate-io/terramate-action@v3
+        with:
+          version: "0.14.7"
+
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@v3
+        with:
+          asdf_branch: v0.15.0
+
+      - name: Install OpenTofu with asdf
+        run: |
+          asdf plugin add opentofu
+          asdf install opentofu
+
+      - name: Install Terragrunt with asdf
+        run: |
+          asdf plugin add terragrunt
+          asdf install terragrunt
+
+      ### Linting
+
+      - name: Check Terramate formatting
+        run: terramate fmt --check
+
+      - name: Check Terraform formatting
+        run: tofu fmt -recursive -check -diff
+
+      ### Check for changed stacks
+
+      - name: List changed stacks
+        id: list-changed
+        run: terramate list -C environments/${{matrix.region}}/${{matrix.env}} --changed
+
+      ### Run the Terraform preview via Terramate in each changed stack
+
+      - name: Run Terraform init in all changed stacks
+        if: steps.list-changed.outputs.stdout
+        run: |
+          terramate \
+            --chdir environments/${{matrix.region}}/${{matrix.env}} \
+            --changed \
+            run \
+            --parallel 1 \
+            terragrunt init
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Plan Terraform changes in changed stacks
+        if: steps.list-changed.outputs.stdout
+        run: |
+          terramate \
+            --chdir environments/${{matrix.region}}/${{matrix.env}} \
+            --changed \
+            run \
+            --parallel 1 \
+            terragrunt apply -auto-approve
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
