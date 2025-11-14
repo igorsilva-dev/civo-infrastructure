@@ -1,0 +1,4 @@
+terragrunt 0.84.1
+terramate 0.14.7
+pre-commit 3.6.2
+opentofu 1.10.3
