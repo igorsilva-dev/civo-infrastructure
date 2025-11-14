@@ -9,6 +9,9 @@ jobs:
   preview:
     name: Plan Terraform changes in changed stacks
     runs-on: ubuntu-latest
+    env:
+      CIVO_ACCESS_KEY: ${{ secrets.CIVO_ACCESS_KEY }}
+      CIVO_SECRET_KEY: ${{ secrets.CIVO_SECRET_KEY }}
 
     permissions:
       id-token: write
