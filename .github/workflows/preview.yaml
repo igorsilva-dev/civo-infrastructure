@@ -55,4 +55,8 @@ jobs:
       - name: Check Terraform formatting
         run: tofu fmt -recursive -check -diff
 
-      
+      ### Check for changed stacks
+
+      - name: List changed stacks
+        id: list-changed
+        run: terramate list -C stacks/terraform/envs/${{ matrix.env }} --changed
