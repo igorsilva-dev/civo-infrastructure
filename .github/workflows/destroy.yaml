@@ -1,0 +1,84 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to destroy (e.g., dev, staging, prod)"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      region:
+        description: "AWS Region to target"
+        required: true
+        type: choice
+        options:
+          - lon1
+          - fra1      
+      confirm:
+        description: "Type 'DESTROY' to confirm"
+        required: true
+        type: string
+
+jobs:
+  destroy:
+    name: Destroy Stack
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate confirmation
+        if: ${{ github.event.inputs.confirm != 'DESTROY' }}
+        run: |
+          echo "❌ You must type DESTROY to confirm."
+          exit 1
+
+      ### Check out the code
+
+      - name: Checkout repository
+        uses: actions/checkout@v4      
+
+      ### Install tooling
+
+      - name: Install Terramate
+        uses: terramate-io/terramate-action@v3
+        with:
+          version: "0.14.7"
+
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@v3
+        with:
+          asdf_branch: v0.15.0
+
+      - name: Install OpenTofu with asdf
+        run: |
+          asdf plugin add opentofu
+          asdf install opentofu
+
+      - name: Install Terragrunt with asdf
+        run: |
+          asdf plugin add terragrunt
+          asdf install terragrunt
+
+      - name: Show parameters
+        run: |
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Region: ${{ github.event.inputs.region }}"          
+
+      ### Run the Terraform destroy via Terramate in the selected stack
+
+      - name: Run Terraform init in the selected stack      
+        run: |
+          terramate \
+            --chdir environments/${{ github.event.inputs.region }}/${{ github.event.inputs.environment }}" \            
+            run \            
+            terragrunt init
+
+      - name: Run Terraform destroy in the selected stack      
+        run: |
+          terramate \
+            --chdir environments/${{ github.event.inputs.region }}/${{ github.event.inputs.environment }}" \            
+            run \            
+            terragrunt destroy -auto-approve
