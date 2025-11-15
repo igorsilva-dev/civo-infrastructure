@@ -72,13 +72,13 @@ jobs:
       - name: Run Terraform init in the selected stack      
         run: |
           terramate \
-            --chdir environments/${{ github.event.inputs.region }}/${{ github.event.inputs.environment }}" \            
+            --chdir environments/${{ github.event.inputs.region }}/${{ github.event.inputs.environment }} \            
             run \            
             terragrunt init
 
       - name: Run Terraform destroy in the selected stack      
         run: |
           terramate \
-            --chdir environments/${{ github.event.inputs.region }}/${{ github.event.inputs.environment }}" \            
+            --chdir environments/${{ github.event.inputs.region }}/${{ github.event.inputs.environment }} \            
             run \            
             terragrunt destroy -auto-approve
