@@ -27,6 +27,10 @@ jobs:
   destroy:
     name: Destroy Stack
     runs-on: ubuntu-latest
+    env:
+      CIVO_ACCESS_KEY: ${{ secrets.CIVO_ACCESS_KEY }}
+      CIVO_SECRET_KEY: ${{ secrets.CIVO_SECRET_KEY }}
+      CIVO_TOKEN: ${{ secrets.CIVO_TOKEN }}
 
     steps:
       - name: Validate confirmation
