@@ -14,3 +14,27 @@ module "kubernetes" {
     }
   ]
 }
+
+# module "argocd" {
+#   source = "git::https://github.com/igorsilva-dev/tf-modules.git//helm?ref=v2025.11.18.03"
+
+#   # Ensure this runs after the Kubernetes cluster is created
+#   depends_on = [module.kubernetes]
+
+#   # ArgoCD Helm chart configuration
+#   chart            = "argo-cd"
+#   repository       = "https://argoproj.github.io/argo-helm"
+#   repository_name  = "argo"
+#   namespace        = "argocd"
+#   create_namespace = true
+#   version          = "7.0.0"
+
+#   # Example values for ArgoCD
+#   values = {
+#     server = {
+#       service = {
+#         type = "LoadBalancer"
+#       }
+#     }
+#   }
+# }
