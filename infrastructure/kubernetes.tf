@@ -1,11 +1,11 @@
 module "kubernetes" {
-  source             = "git::https://github.com/igorsilva-dev/tf-modules.git//civo/kubernetes?ref=v2026.02.04.03"
+  source             = "git::https://github.com/igorsilva-dev/tf-modules.git//civo/kubernetes?ref=v2026.02.09.01"
   cluster_name       = "k8s-labs"
   write_kubeconfig   = true
   network_id         = module.network.network_id
   firewall_id        = module.network.firewall_id
   kubernetes_version = "1.32.5-k3s1"
-  applications       = "argocd"
+
 
   pools = [
     {
