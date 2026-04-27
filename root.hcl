@@ -13,7 +13,7 @@ generate "backend" {
 terraform {
   backend "s3" {
       endpoint                    = "https://objectstore.lon1.civo.com"
-      bucket                      = "tf-store"
+      bucket                      = "tf-backend"
       key                         = "${path_relative_to_include()}/tofu.tfstate"
       region                      = "LON1"
       skip_region_validation      = true
