@@ -1,7 +1,12 @@
 repos:
-  - repo: https://github.com/terramate-io/pre-commit-hooks
-    rev: v0.5.1
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.96.3
     hooks:
-      - id: terramate-fmt
-      - id: terramate-generate
-      - id: terraform-fmt
+      - id: terraform_fmt
+      - id: terraform_validate
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-merge-conflict

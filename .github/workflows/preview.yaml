@@ -7,7 +7,7 @@ on:
 
 jobs:
   preview:
-    name: Plan Terraform changes in changed stacks
+    name: Plan Terraform changes
     runs-on: ubuntu-latest
     env:
       CIVO_ACCESS_KEY: ${{ secrets.CIVO_ACCESS_KEY }}
@@ -18,10 +18,9 @@ jobs:
       id-token: write
       contents: read
       pull-requests: write
-      checks: read    
-    
+      checks: read
+
     strategy:
-      # Let other stacks finish even if one fails.
       fail-fast: false
       matrix:
         include:
@@ -30,20 +29,10 @@ jobs:
           - env: dev
             region: fra1
     steps:
-      ### Check out the code
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
-          fetch-depth: 0
-
-      ### Install tooling
-
-      - name: Install Terramate
-        uses: terramate-io/terramate-action@v3
-        with:
-          version: "0.14.7"
 
       - name: Install asdf
         uses: asdf-vm/actions/setup@v3
@@ -60,42 +49,13 @@ jobs:
           asdf plugin add terragrunt
           asdf install terragrunt
 
-      ### Linting
-
-      - name: Check Terramate formatting
-        run: terramate fmt --check
-
       - name: Check Terraform formatting
         run: tofu fmt -recursive -check -diff
 
-      ### Check for changed stacks
+      - name: Terragrunt init
+        working-directory: environments/${{ matrix.region }}/${{ matrix.env }}
+        run: terragrunt init
 
-      - name: List changed stacks
-        id: list-changed
-        run: terramate list -C environments/${{matrix.region}}/${{matrix.env}} --changed
-
-      ### Run the Terraform preview via Terramate in each changed stack
-
-      - name: Run Terraform init in all changed stacks
-        if: steps.list-changed.outputs.stdout
-        run: |
-          terramate \
-            --chdir environments/${{matrix.region}}/${{matrix.env}} \
-            --changed \
-            run \
-            --parallel 1 \
-            terragrunt init
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Plan Terraform changes in changed stacks
-        if: steps.list-changed.outputs.stdout
-        run: |
-          terramate \
-            --chdir environments/${{matrix.region}}/${{matrix.env}} \
-            --changed \
-            run \
-            --parallel 1 \
-            terragrunt plan
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: Terragrunt plan
+        working-directory: environments/${{ matrix.region }}/${{ matrix.env }}
+        run: terragrunt plan

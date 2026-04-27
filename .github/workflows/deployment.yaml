@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Terraform changes in changed Terramate stacks
+    name: Deploy Terraform changes
     runs-on: ubuntu-latest
     env:
       CIVO_ACCESS_KEY: ${{ secrets.CIVO_ACCESS_KEY }}
@@ -18,10 +18,9 @@ jobs:
       id-token: write
       contents: read
       pull-requests: read
-      checks: read   
-    
+      checks: read
+
     strategy:
-      # Let other stacks finish even if one fails.
       fail-fast: false
       matrix:
         include:
@@ -30,20 +29,11 @@ jobs:
           - env: dev
             region: fra1
     steps:
-      ### Check out the code
-
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
-
-      ### Install tooling
-
-      - name: Install Terramate
-        uses: terramate-io/terramate-action@v3
-        with:
-          version: "0.14.7"
 
       - name: Install asdf
         uses: asdf-vm/actions/setup@v3
@@ -60,47 +50,10 @@ jobs:
           asdf plugin add terragrunt
           asdf install terragrunt
 
-      ### Check for changed stacks
+      - name: Terragrunt init
+        working-directory: environments/${{ matrix.region }}/${{ matrix.env }}
+        run: terragrunt init
 
-      - name: List changed stacks
-        id: list-changed
-        run: terramate list -C environments/${{matrix.region}}/${{matrix.env}} --changed
-
-      ### Run the Terraform deployment via Terramate in each changed stack
-
-      - name: Run Terraform init in all changed stacks
-        if: steps.list-changed.outputs.stdout
-        run: |
-          terramate \
-            --chdir environments/${{matrix.region}}/${{matrix.env}} \
-            --changed \
-            run \
-            --parallel 1 \
-            terragrunt init
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Run Terraform apply in all changed stacks
-        id: deploy       
-        if: steps.list-changed.outputs.stdout
-        run: |
-          terramate \
-            --chdir environments/${{matrix.region}}/${{matrix.env}} \
-            --changed \
-            run \
-            --parallel 1 \
-            terragrunt apply -auto-approve
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Run drift detection in all deployed stacks
-        if: steps.list-changed.outputs.stdout && ! cancelled() && steps.deploy.outcome != 'skipped'
-        run: |
-          terramate \
-            --chdir environments/${{matrix.region}}/${{matrix.env}} \
-            --changed \
-            run \
-            --parallel 1 \
-            drift detection
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: Terragrunt apply
+        working-directory: environments/${{ matrix.region }}/${{ matrix.env }}
+        run: terragrunt apply -auto-approve
