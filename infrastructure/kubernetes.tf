@@ -4,7 +4,7 @@ module "kubernetes" {
   write_kubeconfig   = true
   network_id         = module.network.network_id
   firewall_id        = module.network.firewall_id
-  kubernetes_version = "1.32.5-k3s1"
+  kubernetes_version = "1.34.2-k3s1"
 
 
   pools = [
