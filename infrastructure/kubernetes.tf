@@ -1,5 +1,5 @@
 module "kubernetes" {
-  source             = "git::https://github.com/igorsilva-dev/tf-modules.git//civo/kubernetes?ref=v2026.04.21.02"
+  source             = "git::https://github.com/igorsilva-dev/tf-modules.git//civo/kubernetes?ref=v0.1.0"
   cluster_name       = "k8s-labs"
   write_kubeconfig   = true
   network_id         = module.network.network_id
@@ -17,7 +17,7 @@ module "kubernetes" {
 }
 
 # module "argocd" {
-#   source = "git::https://github.com/igorsilva-dev/tf-modules.git//helm?ref=v2026.04.21.02"
+#   source = "git::https://github.com/igorsilva-dev/tf-modules.git//helm?ref=v0.1.0"
 
 #   # Ensure this runs after the Kubernetes cluster is created
 #   depends_on = [module.kubernetes]
