@@ -10,7 +10,7 @@ module "kubernetes" {
   pools = [
     {
       label      = "worker-pool-1"
-      size       = "g4s.kube.xsmall"
+      size       = "g4s.kube.medium"
       node_count = 1
     }
   ]
@@ -39,11 +39,10 @@ module "argocd" {
         replicas = 1
         metrics  = { enabled = true }
       }
-      "redis-ha"     = { enabled = false }
-      server         = { service = { type = "ClusterIP" } }
-      dex            = { enabled = false }
-      notifications  = { enabled = false }
-      applicationSet = { enabled = false }
+      "redis-ha"    = { enabled = false }
+      server        = { service = { type = "ClusterIP" } }
+      dex           = { enabled = false }
+      notifications = { enabled = false }
     })
   ]
 }
