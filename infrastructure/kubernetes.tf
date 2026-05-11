@@ -26,6 +26,7 @@ module "argocd" {
   namespace        = "argocd"
   create_namespace = true
   timeout          = 900
+  wait             = false
 
   values = [
     yamlencode({
@@ -38,8 +39,11 @@ module "argocd" {
         replicas = 1
         metrics  = { enabled = true }
       }
-      "redis-ha" = { enabled = false }
-      server     = { service = { type = "ClusterIP" } }
+      "redis-ha"     = { enabled = false }
+      server         = { service = { type = "ClusterIP" } }
+      dex            = { enabled = false }
+      notifications  = { enabled = false }
+      applicationSet = { enabled = false }
     })
   ]
 }
