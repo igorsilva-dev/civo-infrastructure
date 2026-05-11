@@ -16,26 +16,30 @@ module "kubernetes" {
   ]
 }
 
-# module "argocd" {
-#   source = "git::https://github.com/igorsilva-dev/tf-modules.git//helm?ref=v0.1.0"
+module "argocd" {
+  source = "git::https://github.com/igorsilva-dev/tf-modules.git//helm?ref=v0.1.0"
 
-#   # Ensure this runs after the Kubernetes cluster is created
-#   depends_on = [module.kubernetes]
+  chart_name       = "argocd"
+  chart            = "argo-cd"
+  chart_repository = "https://argoproj.github.io/argo-helm"
+  chart_version    = "7.7.10"
+  namespace        = "argocd"
+  create_namespace = true
+  kubeconfig_path  = "/tmp/${module.kubernetes.cluster_name}-kubeconfig"
 
-#   # ArgoCD Helm chart configuration
-#   chart            = "argo-cd"
-#   repository       = "https://argoproj.github.io/argo-helm"
-#   repository_name  = "argo"
-#   namespace        = "argocd"
-#   create_namespace = true
-#   version          = "7.0.0"
-
-#   # Example values for ArgoCD
-#   values = {
-#     server = {
-#       service = {
-#         type = "LoadBalancer"
-#       }
-#     }
-#   }
-# }
+  values = [
+    yamlencode({
+      configs = {
+        params = {
+          "server.insecure" = true
+        }
+      }
+      controller = {
+        replicas = 1
+        metrics  = { enabled = true }
+      }
+      "redis-ha" = { enabled = false }
+      server     = { service = { type = "ClusterIP" } }
+    })
+  ]
+}
