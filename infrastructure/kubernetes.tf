@@ -25,7 +25,8 @@ module "argocd" {
   chart_version    = "7.7.10"
   namespace        = "argocd"
   create_namespace = true
-  kubeconfig_path  = "/tmp/${module.kubernetes.cluster_name}-kubeconfig"
+  kubeconfig_path  = local.kubeconfig_path
+  timeout          = 900
 
   values = [
     yamlencode({
