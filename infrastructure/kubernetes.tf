@@ -17,7 +17,7 @@ module "kubernetes" {
 }
 
 module "argocd" {
-  source = "git::https://github.com/igorsilva-dev/tf-modules.git//helm?ref=v0.1.0"
+  source = "git::https://github.com/igorsilva-dev/tf-modules.git//helm?ref=v2026.05.11.02"
 
   chart_name       = "argocd"
   chart            = "argo-cd"
@@ -25,7 +25,6 @@ module "argocd" {
   chart_version    = "7.7.10"
   namespace        = "argocd"
   create_namespace = true
-  kubeconfig_path  = local.kubeconfig_path
   timeout          = 900
 
   values = [
