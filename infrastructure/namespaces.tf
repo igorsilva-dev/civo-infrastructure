@@ -24,6 +24,12 @@ module "namespaces" {
         "pod-security.kubernetes.io/enforce" = "privileged"
         "app.kubernetes.io/part-of"          = "sandbox"
       }
+    },
+    {
+      name = "external-secrets"
+      labels = {
+        "app.kubernetes.io/part-of" = "external-secrets"
+      }
     }
   ]
 
