@@ -22,6 +22,11 @@ on:
         required: true
         type: string
 
+# Serialize state operations across deployment, destroy, and scale-to-zero.
+concurrency:
+  group: civo-lon1-dev-state
+  cancel-in-progress: false
+
 jobs:
   destroy:
     name: Destroy Stack

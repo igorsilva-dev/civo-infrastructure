@@ -1,0 +1,87 @@
+name: Scale to Zero (cost schedule)
+
+# Tears the lon1/dev cluster down on Friday evening and brings it back up on
+# Monday morning, so it does not bill over the weekend. The cluster is
+# reproducible from git (Argo CD reconciles everything from k8s-gitops), so a
+# destroy is safe: the desired state lives in git, not in the cluster.
+#
+# Times are UTC. CET is UTC+1 (winter) / UTC+2 (summer). A roughly one-hour
+# drift across DST is fine for a dev cluster, so the crons are not adjusted.
+
+on:
+  schedule:
+    - cron: "0 19 * * 5" # Friday ~20:00 CET: down for the weekend
+    - cron: "0 6 * * 1" # Monday ~07:00 CET: back up
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Bring the cluster up (apply) or down (destroy)"
+        required: true
+        type: choice
+        options:
+          - up
+          - down
+
+# Serialize with deployment.yaml and destroy.yaml so a scheduled destroy can
+# never run concurrently with a merge-triggered apply. The Object Store backend
+# has no state locking of its own.
+concurrency:
+  group: civo-lon1-dev-state
+  cancel-in-progress: false
+
+jobs:
+  power-cycle:
+    name: Power cycle lon1/dev
+    runs-on: ubuntu-latest
+    env:
+      CIVO_ACCESS_KEY: ${{ secrets.CIVO_ACCESS_KEY }}
+      CIVO_SECRET_KEY: ${{ secrets.CIVO_SECRET_KEY }}
+      CIVO_TOKEN: ${{ secrets.CIVO_TOKEN }}
+      TF_VAR_doppler_token: ${{ secrets.DOPPLER_TOKEN }}
+    permissions:
+      contents: read
+    steps:
+      - name: Resolve action
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            action="${{ github.event.inputs.action }}"
+          elif [ "${{ github.event.schedule }}" = "0 6 * * 1" ]; then
+            action="up"
+          else
+            action="down"
+          fi
+          echo "action=$action" >> "$GITHUB_OUTPUT"
+          echo "Resolved action: $action"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@v3
+        with:
+          asdf_branch: v0.15.0
+
+      - name: Install OpenTofu with asdf
+        run: |
+          asdf plugin add opentofu
+          asdf install opentofu
+
+      - name: Install Terragrunt with asdf
+        run: |
+          asdf plugin add terragrunt
+          asdf install terragrunt
+
+      - name: Terragrunt init
+        working-directory: environments/lon1/dev
+        run: terragrunt init
+
+      - name: Terragrunt apply (up)
+        if: steps.resolve.outputs.action == 'up'
+        working-directory: environments/lon1/dev
+        run: terragrunt apply -auto-approve
+
+      - name: Terragrunt destroy (down)
+        if: steps.resolve.outputs.action == 'down'
+        working-directory: environments/lon1/dev
+        run: terragrunt destroy -auto-approve
