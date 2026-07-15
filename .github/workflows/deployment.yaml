@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+# Serialize state operations across deployment, destroy, and scale-to-zero.
+concurrency:
+  group: civo-lon1-dev-state
+  cancel-in-progress: false
+
 jobs:
   deploy:
     name: Deploy Terraform changes
