@@ -78,9 +78,17 @@ terragrunt apply
 
 Apply takes ~5 minutes on a clean state and creates everything end to end: network → cluster → namespaces → Doppler-token Secret → Argo CD Helm release → root Application CR.
 
-### CI apply
+### CI apply and the cluster lifecycle
 
-Push to `main`. The deployment workflow runs `terragrunt apply -auto-approve` for `environments/lon1/dev`. Same env vars as above, sourced from Actions secrets.
+The cluster only exists while it is being worked on:
+
+- **Up on demand.** Actions → **Cluster Up** → Run workflow. Runs `terragrunt apply` for `environments/lon1/dev` (~5-10 minutes to a reconciled cluster).
+- **Down every night at 21:00 Madrid time.** `cluster-down.yaml` runs `terragrunt destroy` on a schedule; it can also be dispatched by hand. It drops the in-cluster resources from state first and destroys only the Civo cluster, network, and firewall, since deleting the cluster takes everything inside it.
+- **Merges to `main` apply only while the cluster is up.** If it is down, the deployment workflow skips with a notice and the change lands on the next Cluster Up.
+
+GitHub disables scheduled workflows after 60 days without a commit. Cluster Up re-enables the nightly teardown on every run, so a cluster is never created without a destroy armed behind it.
+
+Same env vars as above, sourced from Actions secrets.
 
 ## Accessing the Argo CD UI
 
@@ -150,7 +158,7 @@ CI runs the same versions via asdf. Pre-commit hooks: `terraform_fmt`, `terrafor
 
 ## Cost
 
-~$22/mo at current sizing: a 1-node `g4s.kube.medium` cluster (~$20/mo) + Civo network/firewall (free) + Civo Object Store state bucket (~$1-2/mo) + Doppler free tier ($0). Detailed breakdown in [`docs/cost.md`](docs/cost.md) once CIVO-009 lands.
+~$22/mo if the cluster ran 24/7: a 1-node `g4s.kube.medium` cluster (~$20/mo) + Civo network/firewall (free) + Civo Object Store state bucket (~$1-2/mo) + Doppler free tier ($0). With the up-on-demand / down-nightly lifecycle, the cluster line bills only for the hours it is up. Detailed breakdown in [`docs/cost.md`](docs/cost.md).
 
 ## Related repos
 
