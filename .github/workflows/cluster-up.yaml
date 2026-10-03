@@ -1,0 +1,64 @@
+name: Cluster Up
+
+# Brings the lon1/dev cluster up on demand. There is no schedule: the cluster
+# only exists while it is being worked on, and cluster-down.yaml tears it down
+# every night at 21:00 Madrid time.
+#
+# Actions -> "Cluster Up" -> Run workflow. ~5-10 minutes to a reconciled cluster.
+
+on:
+  workflow_dispatch:
+
+# Serialize with every other workflow that touches lon1/dev state. The Object
+# Store backend has no state locking of its own.
+concurrency:
+  group: civo-lon1-dev-state
+  cancel-in-progress: false
+
+jobs:
+  up:
+    name: Apply lon1/dev
+    runs-on: ubuntu-latest
+    env:
+      CIVO_ACCESS_KEY: ${{ secrets.CIVO_ACCESS_KEY }}
+      CIVO_SECRET_KEY: ${{ secrets.CIVO_SECRET_KEY }}
+      CIVO_TOKEN: ${{ secrets.CIVO_TOKEN }}
+      TF_VAR_doppler_token: ${{ secrets.DOPPLER_TOKEN }}
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      # GitHub disables scheduled workflows after 60 days without a commit,
+      # which silently killed the previous scale-to-zero schedule. Re-arm the
+      # nightly teardown before creating anything, so a cluster never exists
+      # without a destroy scheduled behind it.
+      - name: Arm the nightly teardown
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow enable cluster-down.yaml --repo "${{ github.repository }}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@v3
+        with:
+          asdf_branch: v0.15.0
+
+      - name: Install OpenTofu with asdf
+        run: |
+          asdf plugin add opentofu
+          asdf install opentofu
+
+      - name: Install Terragrunt with asdf
+        run: |
+          asdf plugin add terragrunt
+          asdf install terragrunt
+
+      - name: Terragrunt init
+        working-directory: environments/lon1/dev
+        run: terragrunt init
+
+      - name: Terragrunt apply
+        working-directory: environments/lon1/dev
+        run: terragrunt apply -auto-approve

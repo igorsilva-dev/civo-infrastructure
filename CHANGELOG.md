@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Phase 2 work begins after `v0.1.0`: Istio service mesh + Prometheus / Grafana observability. See the Portfolio Roadmap for the full plan.
 
+### Changed
+
+- **Cluster lifecycle: up on demand, down every night.** `scale-to-zero.yaml` (down Friday, up Monday) is replaced by `cluster-up.yaml` (manual dispatch only) and `cluster-down.yaml` (daily at 21:00 Europe/Madrid, DST-aware via paired 19:00/20:00 UTC crons). Cluster Up re-enables the teardown workflow on every run, because GitHub had disabled the old schedule for 60 days of repo inactivity.
+- **Teardown skips the Kubernetes API.** The nightly destroy removes `kubernetes_*` / `kubectl_manifest` / `helm_release` resources from state and destroys only the Civo cluster, network, and firewall. The 2026-07-17 destroy timed out with the `sandbox` namespace stuck in `Terminating`.
+- **Merge-triggered apply only runs while the cluster is up**, so a merge never creates a cluster outside a work session.
+
+### Fixed
+
+- **K3s version bumped `1.34.2-k3s1` → `1.35.0-k3s1`.** Civo deprecated 1.34.2 and rejected every cluster create with `deprecated_cluster_version`, which is why all eight scheduled Monday bring-ups between 2026-07-27 and 2026-09-14 failed. Second forced bump after `1.32.5-k3s1`.
+
 ## [0.1.0] — 2026-05-18
 
 **Phase 1 — Civo Infrastructure Bootstrap.** First milestone release. A single `terragrunt apply` brings up a Civo K3s cluster, namespaces, Argo CD via Helm, and the root Argo CD Application that hands off everything else to [k8s-gitops](https://github.com/igorsilva-dev/k8s-gitops) via the app-of-apps pattern. External Secrets Operator integrates with Doppler so no plaintext secrets land in git.

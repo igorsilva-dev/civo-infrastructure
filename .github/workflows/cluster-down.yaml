@@ -1,0 +1,99 @@
+name: Cluster Down (nightly)
+
+# Tears the lon1/dev cluster down every night at 21:00 Madrid time, so it only
+# bills for the hours it is worked on. Bring it back with cluster-up.yaml. The
+# cluster is reproducible from git (Argo CD reconciles everything from
+# k8s-gitops, ADR 0003), so a destroy loses nothing.
+#
+# GitHub cron is UTC-only and Madrid moves between UTC+2 (CEST) and UTC+1
+# (CET). Both 19:00 and 20:00 UTC are scheduled, and the gate below keeps the
+# one that is 21:00 in Madrid on that date. The gate keys on which cron fired,
+# not the wall clock, so a run GitHub starts late (it has been hours late
+# before) still tears down instead of being skipped.
+
+on:
+  schedule:
+    - cron: "0 19 * * *" # 21:00 CEST (summer)
+    - cron: "0 20 * * *" # 21:00 CET (winter)
+  workflow_dispatch:
+
+concurrency:
+  group: civo-lon1-dev-state
+  cancel-in-progress: false
+
+jobs:
+  down:
+    name: Destroy lon1/dev
+    runs-on: ubuntu-latest
+    env:
+      CIVO_ACCESS_KEY: ${{ secrets.CIVO_ACCESS_KEY }}
+      CIVO_SECRET_KEY: ${{ secrets.CIVO_SECRET_KEY }}
+      CIVO_TOKEN: ${{ secrets.CIVO_TOKEN }}
+      TF_VAR_doppler_token: ${{ secrets.DOPPLER_TOKEN }}
+    permissions:
+      contents: read
+    steps:
+      - name: Gate on Madrid time
+        id: gate
+        run: |
+          offset="$(TZ=Europe/Madrid date +%z)"
+          case "${{ github.event_name }}|${{ github.event.schedule }}|$offset" in
+            workflow_dispatch*) run=true ;;
+            "schedule|0 19 * * *|+0200") run=true ;;
+            "schedule|0 20 * * *|+0100") run=true ;;
+            *) run=false ;;
+          esac
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "Madrid offset $offset, trigger '${{ github.event.schedule }}': run=$run"
+
+      - name: Checkout
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@v4
+
+      - name: Install asdf
+        if: steps.gate.outputs.run == 'true'
+        uses: asdf-vm/actions/setup@v3
+        with:
+          asdf_branch: v0.15.0
+
+      - name: Install OpenTofu with asdf
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          asdf plugin add opentofu
+          asdf install opentofu
+
+      - name: Install Terragrunt with asdf
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          asdf plugin add terragrunt
+          asdf install terragrunt
+
+      - name: Terragrunt init
+        if: steps.gate.outputs.run == 'true'
+        working-directory: environments/lon1/dev
+        run: terragrunt init
+
+      # Deleting the Civo cluster takes every in-cluster object with it, so
+      # there is no point deleting them one by one through the Kubernetes API
+      # first. That path is also what hung the 2026-07-17 teardown: the
+      # sandbox namespace sat in Terminating until the 5-minute timeout.
+      # Dropping the kubernetes/kubectl/helm resources from state leaves a
+      # destroy of only the Civo cluster, network, and firewall.
+      - name: Forget in-cluster resources
+        if: steps.gate.outputs.run == 'true'
+        working-directory: environments/lon1/dev
+        run: |
+          addrs=()
+          while IFS= read -r addr; do
+            [ -n "$addr" ] && addrs+=("$addr")
+          done < <(terragrunt state list | grep -E '(^|\.)(kubernetes_[a-z0-9_]+|kubectl_manifest|helm_release)\.' || true)
+          if [ "${#addrs[@]}" -eq 0 ]; then
+            echo "No in-cluster resources in state."
+          else
+            terragrunt state rm "${addrs[@]}"
+          fi
+
+      - name: Terragrunt destroy
+        if: steps.gate.outputs.run == 'true'
+        working-directory: environments/lon1/dev
+        run: terragrunt destroy -auto-approve

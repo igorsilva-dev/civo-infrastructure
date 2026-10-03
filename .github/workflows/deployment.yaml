@@ -5,7 +5,13 @@ on:
     branches:
       - main
 
-# Serialize state operations across deployment, destroy, and scale-to-zero.
+# Applies merged changes to lon1/dev, but only while the cluster is up. The
+# cluster is brought up on demand (cluster-up.yaml) and torn down nightly
+# (cluster-down.yaml); a merge while it is down must not create it, or a
+# docs-only merge at 22:00 would bill until the next night's teardown. The
+# change lands on the next Cluster Up, which applies main.
+
+# Serialize state operations across deployment, destroy, cluster-up, and cluster-down.
 concurrency:
   group: civo-lon1-dev-state
   cancel-in-progress: false
@@ -58,6 +64,18 @@ jobs:
         working-directory: environments/${{ matrix.region }}/${{ matrix.env }}
         run: terragrunt init
 
+      - name: Check the cluster is up
+        id: cluster
+        working-directory: environments/${{ matrix.region }}/${{ matrix.env }}
+        run: |
+          if terragrunt state list | grep -qx 'module.kubernetes.civo_kubernetes_cluster.cluster'; then
+            echo "up=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "up=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Cluster is down; skipping apply. The change lands on the next Cluster Up."
+          fi
+
       - name: Terragrunt apply
+        if: steps.cluster.outputs.up == 'true'
         working-directory: environments/${{ matrix.region }}/${{ matrix.env }}
         run: terragrunt apply -auto-approve
