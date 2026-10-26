@@ -22,7 +22,7 @@ on:
         required: true
         type: string
 
-# Serialize state operations across deployment, destroy, and scale-to-zero.
+# Serialize state operations across deployment, destroy, cluster-up, and cluster-down.
 concurrency:
   group: civo-lon1-dev-state
   cancel-in-progress: false
