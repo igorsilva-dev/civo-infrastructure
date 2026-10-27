@@ -22,7 +22,7 @@ module "argocd" {
   chart_name       = "argocd"
   chart            = "argo-cd"
   chart_repository = "https://argoproj.github.io/argo-helm"
-  chart_version    = "7.7.10"
+  chart_version    = "10.11.6"
   namespace        = "argocd"
   create_namespace = true
   timeout          = 900
