@@ -83,7 +83,7 @@ Apply takes ~5 minutes on a clean state and creates everything end to end: netwo
 The cluster only exists while it is being worked on:
 
 - **Up on demand.** Actions → **Cluster Up** → Run workflow. Runs `terragrunt apply` for `environments/lon1/dev` (~5-10 minutes to a reconciled cluster).
-- **Down every night at 21:00 Madrid time.** `cluster-down.yaml` runs `terragrunt destroy` on a schedule; it can also be dispatched by hand. It drops the in-cluster resources from state first and destroys only the Civo cluster, network, and firewall, since deleting the cluster takes everything inside it.
+- **Down every night at 21:07 Madrid time, with a 23:37 backstop.** `cluster-down.yaml` runs `terragrunt destroy` on a schedule (off the top of the hour, where GitHub delays and drops scheduled runs most; the backstop catches a dropped run); it can also be dispatched by hand. It drops the in-cluster resources from state first and destroys only the Civo cluster, network, and firewall, since deleting the cluster takes everything inside it.
 - **Merges to `main` apply only while the cluster is up.** If it is down, the deployment workflow skips with a notice and the change lands on the next Cluster Up.
 
 GitHub disables scheduled workflows after 60 days without a commit. Cluster Up re-enables the nightly teardown on every run, so a cluster is never created without a destroy armed behind it.

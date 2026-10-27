@@ -16,6 +16,7 @@ Phase 2 work begins after `v0.1.0`: Istio service mesh + Prometheus / Grafana ob
 
 ### Fixed
 
+- **Nightly teardown moved off the top of the hour, with a backstop.** `cluster-down.yaml` now fires at 21:07 Madrid (`7 19`/`7 20` UTC) instead of 21:00, and again at 23:37 (`37 21`/`37 22` UTC). On 2026-10-26 the `0 20` run started 3.5 hours late and the `0 19` run never appeared: GitHub delays and drops scheduled runs most at :00. The backstop is a plain second destroy, a no-op on empty state, so a dropped run costs about two hours of cluster time instead of a full day.
 - **K3s version bumped `1.34.2-k3s1` → `1.35.0-k3s1`.** Civo deprecated 1.34.2 and rejected every cluster create with `deprecated_cluster_version`, which is why all eight scheduled Monday bring-ups between 2026-07-27 and 2026-09-14 failed. Second forced bump after `1.32.5-k3s1`.
 
 ## [0.1.0] — 2026-05-18
