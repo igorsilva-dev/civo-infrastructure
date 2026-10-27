@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Phase 2 work begins after `v0.1.0`: Istio service mesh + Prometheus / Grafana observability. See the Portfolio Roadmap for the full plan.
 
+### Added
+
+- **Tailscale device cleanup (EDGE-001).** The nightly teardown destroys the cluster through the Civo API, so the Tailscale operator never logs its devices out; every rebuild would leave offline duplicates and push names to `argocd-1`, `argocd-2`. `.github/scripts/tailscale-cleanup.sh` deletes every `tag:k8s-operator` / `tag:k8s` device through the Tailscale API (OAuth client credentials). `cluster-down.yaml` runs it after the destroy (before it, the running operator would re-register), and `cluster-up.yaml` before the apply to catch leftovers. Both steps are `continue-on-error` and skip when `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` aren't set. Untagged devices are never touched.
+
 ### Changed
 
 - **Second worker node (PLAT-001).** `node_count` 1 → 2 on the `g4s.kube.medium` pool (Option B, decided 2026-09-09). One node has ~3 Gi allocatable and Argo CD alone uses ~1.2 Gi; the Phase 2 LGTM + Tailscale + Envoy Gateway stack adds an estimated 3.6–4.5 Gi. Two nodes also make multi-node scheduling and node-level chaos possible. The cluster is created with two nodes on the next Cluster Up.
