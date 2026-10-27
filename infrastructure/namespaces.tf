@@ -5,7 +5,6 @@ module "namespaces" {
     {
       name = "platform"
       labels = {
-        "istio-injection"                    = "enabled"
         "pod-security.kubernetes.io/enforce" = "restricted"
         "app.kubernetes.io/part-of"          = "platform"
       }
@@ -13,7 +12,6 @@ module "namespaces" {
     {
       name = "agents"
       labels = {
-        "istio-injection"                    = "enabled"
         "pod-security.kubernetes.io/enforce" = "baseline"
         "app.kubernetes.io/part-of"          = "agents"
       }

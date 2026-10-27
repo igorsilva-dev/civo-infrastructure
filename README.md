@@ -45,7 +45,7 @@ The deeper story lives in [`docs/architecture.md`](docs/architecture.md). Non-ob
 
 ## What this repo provisions
 
-- A K3s cluster on Civo (`g4s.kube.medium`, single worker for portfolio cost) plus its network and firewall.
+- A K3s cluster on Civo (2 × `g4s.kube.medium` workers) plus its network and a firewall that only exposes the Kubernetes API (`6443`).
 - Five namespaces — `platform`, `agents`, `sandbox`, `external-secrets`, `argocd`.
 - Argo CD via the official Helm chart (one-time Terraform-managed install; Argo CD owns itself after first sync).
 - A single `root-app` Application CR pointing at [`k8s-gitops`](https://github.com/igorsilva-dev/k8s-gitops) — every other workload reconciles from there.
@@ -158,7 +158,7 @@ CI runs the same versions via asdf. Pre-commit hooks: `terraform_fmt`, `terrafor
 
 ## Cost
 
-~$22/mo if the cluster ran 24/7: a 1-node `g4s.kube.medium` cluster (~$20/mo) + Civo network/firewall (free) + Civo Object Store state bucket (~$1-2/mo) + Doppler free tier ($0). With the up-on-demand / down-nightly lifecycle, the cluster line bills only for the hours it is up. Detailed breakdown in [`docs/cost.md`](docs/cost.md).
+~$42/mo if the cluster ran 24/7: a 2-node `g4s.kube.medium` cluster (~$40/mo) + Civo network/firewall (free) + Civo Object Store state bucket (~$1-2/mo) + Doppler free tier ($0). With the up-on-demand / down-nightly lifecycle, the cluster line bills only for the hours it is up. Detailed breakdown in [`docs/cost.md`](docs/cost.md).
 
 ## Related repos
 

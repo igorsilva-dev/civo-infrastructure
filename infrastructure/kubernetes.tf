@@ -11,7 +11,7 @@ module "kubernetes" {
     {
       label      = "worker-pool-1"
       size       = "g4s.kube.medium"
-      node_count = 1
+      node_count = 2
     }
   ]
 }
