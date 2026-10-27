@@ -55,6 +55,15 @@ jobs:
           asdf plugin add terragrunt
           asdf install terragrunt
 
+      # Leftovers from a teardown whose cleanup failed would push names to argocd-1, ... Never
+      # blocks the bring-up.
+      - name: Remove stale Tailscale devices
+        continue-on-error: true
+        env:
+          TS_OAUTH_CLIENT_ID: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          TS_OAUTH_CLIENT_SECRET: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+        run: .github/scripts/tailscale-cleanup.sh
+
       - name: Terragrunt init
         working-directory: environments/lon1/dev
         run: terragrunt init

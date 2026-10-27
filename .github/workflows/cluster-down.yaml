@@ -107,3 +107,14 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         working-directory: environments/lon1/dev
         run: terragrunt destroy -auto-approve
+
+      # After the destroy, not before: a running operator would re-register its devices with its
+      # OAuth client. Never fails the teardown; a Tailscale API problem only leaves stale devices,
+      # which Cluster Up removes before the next bring-up.
+      - name: Remove the cluster's Tailscale devices
+        if: steps.gate.outputs.run == 'true'
+        continue-on-error: true
+        env:
+          TS_OAUTH_CLIENT_ID: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          TS_OAUTH_CLIENT_SECRET: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
+        run: .github/scripts/tailscale-cleanup.sh
