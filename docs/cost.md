@@ -6,13 +6,13 @@ Monthly USD estimate for the Phase 1 portfolio deployment on Civo. Sourced from 
 
 | Item | Detail | Estimate |
 |---|---|---|
-| K3s cluster (compute) | 1 × `g4s.kube.medium` (2 vCPU, 4 GB RAM, 50 GB SSD) | ~$20/mo |
+| K3s cluster (compute) | 2 × `g4s.kube.medium` (2 vCPU, 4 GB RAM, 50 GB SSD each) | ~$40/mo if run 24/7; billed per hour actually up (see below) |
 | Network | 1 Civo network | $0 |
 | Firewall | Default firewall with K8s API rules | $0 |
 | Civo Object Store | `tf-backend` bucket for Terragrunt remote state (< 1 GB) | $0-2/mo |
 | Doppler | `k8s-codeup` project, free tier (1 project, 3 configs, single user) | $0 |
 | Argo CD UI exposure | ClusterIP only; access via `kubectl proxy` | $0 |
-| **Total** | | **~$20-22/mo** |
+| **Total** | | **~$40-42/mo at 24/7; a few dollars a month at the real on-demand usage** |
 
 The cluster is the only non-trivial line. Everything else is free at portfolio scale.
 

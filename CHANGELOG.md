@@ -10,6 +10,10 @@ Phase 2 work begins after `v0.1.0`: Istio service mesh + Prometheus / Grafana ob
 
 ### Changed
 
+- **Second worker node (PLAT-001).** `node_count` 1 → 2 on the `g4s.kube.medium` pool (Option B, decided 2026-09-09). One node has ~3 Gi allocatable and Argo CD alone uses ~1.2 Gi; the Phase 2 LGTM + Tailscale + Envoy Gateway stack adds an estimated 3.6–4.5 Gi. Two nodes also make multi-node scheduling and node-level chaos possible. The cluster is created with two nodes on the next Cluster Up.
+- **Firewall locked down to the Kubernetes API (PLAT-002).** `main_firewall` used Civo's default rules, which allow **all** inbound TCP/UDP from `0.0.0.0/0`. Inbound is now `6443/tcp` only (kept open to `0.0.0.0/0` for the GitHub Actions runners; certificate-protected), plus everything from the network's own CIDR for node-to-node traffic. Outbound stays open. Uses the new `ingress_rules` input in tf-modules `civo/network`.
+- **Removed the `istio-injection: enabled` labels** from `platform` and `agents`. Istio was parked when Phase 2 was reworked (2026-10-27); the labels did nothing.
+
 - **Cluster lifecycle: up on demand, down every night.** `scale-to-zero.yaml` (down Friday, up Monday) is replaced by `cluster-up.yaml` (manual dispatch only) and `cluster-down.yaml` (daily at 21:00 Europe/Madrid, DST-aware via paired 19:00/20:00 UTC crons). Cluster Up re-enables the teardown workflow on every run, because GitHub had disabled the old schedule for 60 days of repo inactivity.
 - **Teardown skips the Kubernetes API.** The nightly destroy removes `kubernetes_*` / `kubectl_manifest` / `helm_release` resources from state and destroys only the Civo cluster, network, and firewall. The 2026-07-17 destroy timed out with the `sandbox` namespace stuck in `Terminating`.
 - **Merge-triggered apply only runs while the cluster is up**, so a merge never creates a cluster outside a work session.
