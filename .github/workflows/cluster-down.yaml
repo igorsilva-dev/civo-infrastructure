@@ -1,6 +1,6 @@
 name: Cluster Down (nightly)
 
-# Tears the lon1/dev cluster down every night at 21:07 Madrid time, so it only
+# Tears the lon1/dev cluster down every night from 18:07 Madrid time, so it only
 # bills for the hours it is worked on. Bring it back with cluster-up.yaml. The
 # cluster is reproducible from git (Argo CD reconciles everything from
 # k8s-gitops, ADR 0003), so a destroy loses nothing.
@@ -14,17 +14,23 @@ name: Cluster Down (nightly)
 # Two slots, both off the top of the hour (GitHub delays and drops scheduled
 # runs most at :00; the 2026-10-26 teardown started 3.5 hours late and the
 # 19:00 UTC run never appeared at all):
-#   - 21:07 Madrid, the teardown.
-#   - 23:37 Madrid, a backstop in case the first run was dropped. Destroy on an
+#   - 18:07 Madrid, the teardown.
+#   - 20:37 Madrid, a backstop in case the first run was dropped. Destroy on an
 #     already-empty state is a no-op, so it needs no "is it still up" check, and
 #     the concurrency group serializes it behind a late first run.
+#
+# Scheduled early on purpose. Moving off :00 didn't remove the delay: on
+# 2026-10-27 every slot started 3 to 4 hours late (the 21:07 teardown at 00:44),
+# so the schedule assumes that delay and lands the destroy around 21:00-22:00.
+# The cost: on a day GitHub runs on time, the cluster goes at 18:07, and an
+# evening session starts with Cluster Up again.
 
 on:
   schedule:
-    - cron: "7 19 * * *" # 21:07 CEST (summer)
-    - cron: "7 20 * * *" # 21:07 CET (winter)
-    - cron: "37 21 * * *" # 23:37 CEST (summer), backstop
-    - cron: "37 22 * * *" # 23:37 CET (winter), backstop
+    - cron: "7 16 * * *" # 18:07 CEST (summer)
+    - cron: "7 17 * * *" # 18:07 CET (winter)
+    - cron: "37 18 * * *" # 20:37 CEST (summer), backstop
+    - cron: "37 19 * * *" # 20:37 CET (winter), backstop
   workflow_dispatch:
 
 concurrency:
@@ -49,8 +55,8 @@ jobs:
           offset="$(TZ=Europe/Madrid date +%z)"
           case "${{ github.event_name }}|${{ github.event.schedule }}|$offset" in
             workflow_dispatch*) run=true ;;
-            "schedule|7 19 * * *|+0200" | "schedule|37 21 * * *|+0200") run=true ;;
-            "schedule|7 20 * * *|+0100" | "schedule|37 22 * * *|+0100") run=true ;;
+            "schedule|7 16 * * *|+0200" | "schedule|37 18 * * *|+0200") run=true ;;
+            "schedule|7 17 * * *|+0100" | "schedule|37 19 * * *|+0100") run=true ;;
             *) run=false ;;
           esac
           echo "run=$run" >> "$GITHUB_OUTPUT"
