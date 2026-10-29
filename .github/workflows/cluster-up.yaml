@@ -2,7 +2,7 @@ name: Cluster Up
 
 # Brings the lon1/dev cluster up on demand. There is no schedule: the cluster
 # only exists while it is being worked on, and cluster-down.yaml tears it down
-# every night at 21:07 Madrid time (23:37 backstop).
+# every night from 18:07 Madrid time (20:37 backstop).
 #
 # Actions -> "Cluster Up" -> Run workflow. ~5-10 minutes to a reconciled cluster.
 
