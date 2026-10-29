@@ -92,16 +92,9 @@ Same env vars as above, sourced from Actions secrets.
 
 ## Accessing the Argo CD UI
 
-`kubectl port-forward` is broken on K3s 1.34 + containerd 2.1.x (known CRI regression). Use `kubectl proxy` instead. Argo CD is configured with `server.rootpath` + `server.basehref` to work behind the apiserver service proxy, which means the access URL is *doubled* (apiserver-proxy prefix + Argo CD's own rootpath):
-
-```sh
-kubectl proxy &
-open "http://localhost:8001/api/v1/namespaces/argocd/services/http:argocd-server:http/proxy/api/v1/namespaces/argocd/services/http:argocd-server:http/proxy/"
-```
+Argo CD is on the tailnet only: **https://argocd.<tailnet>.ts.net**, from any device signed in to the tailnet. A Tailscale Ingress in [`k8s-gitops`](https://github.com/igorsilva-dev/k8s-gitops/blob/main/argocd/config/ingress.yaml) puts it there; the operator's proxy terminates TLS with a Tailscale certificate. Nothing is exposed publicly: the firewall still only opens `6443`.
 
 Login: `admin` / value of `kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d`.
-
-The doubled URL goes away in Phase 2 when Istio + ingress lands.
 
 ## GitOps flow — adding a workload
 

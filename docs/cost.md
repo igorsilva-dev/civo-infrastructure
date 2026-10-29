@@ -11,7 +11,7 @@ Monthly USD estimate for the Phase 1 portfolio deployment on Civo. Sourced from 
 | Firewall | Default firewall with K8s API rules | $0 |
 | Civo Object Store | `tf-backend` bucket for Terragrunt remote state (< 1 GB) | $0-2/mo |
 | Doppler | `k8s-codeup` project, free tier (1 project, 3 configs, single user) | $0 |
-| Argo CD UI exposure | ClusterIP only; access via `kubectl proxy` | $0 |
+| Argo CD UI exposure | Tailscale Ingress (tailnet only, no load balancer) | $0 |
 | **Total** | | **~$40-42/mo at 24/7; a few dollars a month at the real on-demand usage** |
 
 The cluster is the only non-trivial line. Everything else is free at portfolio scale.
@@ -46,7 +46,7 @@ The Civo signup credit (typically $250 at the time of writing) covers Phase 1 fo
 
 ## What this excludes
 
-- Domain name (~$10-15/year for a `.dev` if you want a public hostname; deferred to Phase 2 with Istio + ingress).
+- Domain name (~$10-15/year for a `.dev` if you want a public hostname; not needed while everything is reached through tailnet names; only a deliberate public demo would need one).
 - Outbound bandwidth (Civo's first 1 TB/region/month is free; portfolio cluster won't approach this).
 - Civo egress fees for Object Store API calls (negligible at portfolio scale; CI runs ~20-30 plans/applies per month, well under any threshold).
 - LoadBalancer ($10/mo each on Civo when used). Phase 1 stays ClusterIP; Phase 2 adds one when Istio ingress comes online.

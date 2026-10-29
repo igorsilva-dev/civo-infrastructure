@@ -61,9 +61,7 @@ Sync waves between *Applications* are respected by Argo CD's root-app sync; with
 
 ### K3s 1.34 + containerd 2.1.x `port-forward` regression
 
-`kubectl port-forward` fails with `read: connection reset by peer` on this cluster. The kubelet's CRI port-forward implementation in containerd 2.1.x has a regression that affects every pod, not just Argo CD. Workaround documented in the [README's UI access section](../README.md#accessing-the-argo-cd-ui).
-
-If a future K3s patch fixes containerd or Civo bumps to a fixed version, the `server.rootpath` and `server.basehref` values in [`k8s-gitops/argocd/values.yaml`](https://github.com/igorsilva-dev/k8s-gitops/blob/main/argocd/values.yaml) can be removed and the UI URL collapses back to the normal `port-forward` flow.
+`kubectl port-forward` fails with `read: connection reset by peer` on this cluster. The kubelet's CRI port-forward implementation in containerd 2.1.x has a regression that affects every pod, not just Argo CD. It no longer blocks UI access: Argo CD is reached through a Tailscale Ingress (see the [README's UI access section](../README.md#accessing-the-argo-cd-ui)), and the `kubectl proxy` workaround (`server.rootpath` / `server.basehref`) was removed in EDGE-002. Not re-tested since the move to K3s 1.35; if `port-forward` still fails there, `kubectl proxy` to a Service works for one-off checks.
 
 ### Civo cluster pool resize is not in-place
 
