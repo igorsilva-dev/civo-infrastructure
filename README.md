@@ -151,7 +151,7 @@ CI runs the same versions via asdf. Pre-commit hooks: `terraform_fmt`, `terrafor
 
 ## Cost
 
-~$42/mo if the cluster ran 24/7: a 2-node `g4s.kube.medium` cluster (~$40/mo) + Civo network/firewall (free) + Civo Object Store state bucket (~$1-2/mo) + Doppler free tier ($0). With the up-on-demand / down-nightly lifecycle, the cluster line bills only for the hours it is up. Detailed breakdown in [`docs/cost.md`](docs/cost.md).
+About **$7 a month** in practice (October 2026): the Civo Object Store state bucket is a fixed $5.43/mo (billed as a 500 GB block), and the 2-node `g4s.kube.medium` cluster costs about $0.06 per hour it is up, so a session costs cents. Running 24/7 would be ~$49/mo. Network, firewall, control plane, data transfer, Doppler and Tailscale are free. Detailed breakdown in [`docs/cost.md`](docs/cost.md).
 
 ## Related repos
 
