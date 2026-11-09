@@ -10,7 +10,9 @@ module "kubernetes" {
   pools = [
     {
       label      = "worker-pool-1"
-      size       = "g4s.kube.medium"
+      # Large, not Medium: Phase 2 measured ~2.6 GiB in use on 2 x Medium (~4.5 GiB
+      # allocatable) before Mimir, Loki and Tempo. See docs/cost.md.
+      size       = "g4s.kube.large"
       node_count = 2
     }
   ]
