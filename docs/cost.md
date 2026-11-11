@@ -40,7 +40,9 @@ Measured on 2026-11-09 with OBS-001 running (Alloy, kube-state-metrics, node-exp
 |---|---|---|---|
 | 2 × Medium | ~4.5 GiB (measured) | $0.060 | Doesn't fit LGTM |
 | 3 × Medium | ~6.75 GiB | $0.089 | Fits with almost no margin |
-| **2 × Large** | ~12 GiB (estimated, to be measured) | $0.119 | Chosen: about double what Phase 2 needs |
+| **2 × Large** | ~10.4 GiB (measured) | $0.119 | Chosen: about double what Phase 2 needs |
+
+Measured on 2026-11-11 on the first Large cluster: **5,327 Mi allocatable per node** (7.39 GiB capacity, 3.87 of 4 CPUs), so about 2 GiB of each node goes to K3s and the system reserve, a little less than on Medium in proportion. With the same workloads as above, the cluster used ~1.8 GiB (~0.7 GiB and ~1.1 GiB per node, the second with Argo CD's application controller at ~490 Mi). LGTM's ~3.1–4 Gi brings that to roughly 5–6 GiB of 10.4.
 
 Large costs about $0.18 more per 6-hour session than three Mediums, and the size change is free in practice because the cluster is rebuilt from scratch every session. Fewer, bigger nodes mean losing one node takes out more, which matters less here than headroom.
 
