@@ -81,7 +81,7 @@ Encountered during the [CIVO-007 ESO v1beta1 → v1 fix](https://github.com/igor
 
 ## Cost
 
-See [`cost.md`](cost.md) (lands in CIVO-009). Short version: ~$22/mo for the current 1-node `g4s.kube.medium` baseline.
+See [`cost.md`](cost.md) (lands in CIVO-009). Short version: about $7 a month in practice, the $5.43 state bucket plus the cluster at about $0.12 per hour it is up (2 × `g4s.kube.large`).
 
 ## ADRs
 
